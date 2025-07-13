@@ -7,13 +7,22 @@ from datetime import datetime
 import uuid
 from user import router as user_router, oauth2_scheme
 from member import router as member_router
+from config import CORS_ORIGINS, UPLOAD_DIR, AVATAR_DIR
+from startup import startup
 
 app = FastAPI(title="PBG87 Backend API", version="1.0.0")
 
-# Allow CORS for frontend (adjust origin as needed)
+@app.on_event("startup")
+async def startup_event():
+    startup()
+
+# Get CORS origins from config
+cors_origins_list = [origin.strip() for origin in CORS_ORIGINS.split(",")]
+
+# Allow CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002"],  # Frontend URLs
+    allow_origins=cors_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*", "Content-Type", "Authorization", "X-Requested-With"],
@@ -21,8 +30,6 @@ app.add_middleware(
 )
 
 # Create uploads directory if it doesn't exist
-UPLOAD_DIR = "uploads"
-AVATAR_DIR = os.path.join(UPLOAD_DIR, "avatars")
 os.makedirs(AVATAR_DIR, exist_ok=True)
 
 # Mount static files
