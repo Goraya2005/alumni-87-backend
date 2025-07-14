@@ -19,7 +19,7 @@ class Member(MemberBase):
     id: str
     user_id: str
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class UserBase(BaseModel):
     name: Optional[str] = None
@@ -34,4 +34,4 @@ class User(UserBase):
     id: str
     member: Optional[Member] = None
     class Config:
-        from_attributes = True 
+        orm_mode = True 

@@ -14,7 +14,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 
 # CORS Configuration
 if ENVIRONMENT == "production":
     FRONTEND_URL = "https://pbg.vercel.app"
-    CORS_ORIGINS = "https://pbg.vercel.app,http://localhost:3000,http://localhost:3001"
+    CORS_ORIGINS = "https://pbg.vercel.app,http://localhost:3000,http://localhost:3001,http://localhost:3002"
 else:
     FRONTEND_URL = "http://localhost:3000"
     CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3002"
