@@ -1,22 +1,27 @@
-# FROM python:3.10.13‐slim
+# Use the exact Python version you want
 FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install build‑tools and your Python deps
+# Copy only requirements first for better caching
 COPY requirements.txt .
+
+# Install OS packages needed to build psycopg2‑binary and other C‑exts
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y --no-install-recommends \
+       build-essential \
+       libpq-dev \
     && pip install --no-cache-dir -r requirements.txt \
     && apt-get purge -y build-essential \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy in your code
+# Copy the rest of your code
 COPY . .
 
-# Use a fixed container port
+# Expose the port your app uses
 ENV PORT 10000
 EXPOSE 10000
 
-# Launch Uvicorn (or whatever your start command is)
+# Start your app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
