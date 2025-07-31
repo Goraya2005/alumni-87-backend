@@ -18,6 +18,7 @@ async def startup_event():
 
 # Get CORS origins from config
 cors_origins_list = [origin.strip() for origin in CORS_ORIGINS.split(",")]
+print(f"CORS Origins List: {cors_origins_list}")
 
 # Allow CORS for frontend
 app.add_middleware(
