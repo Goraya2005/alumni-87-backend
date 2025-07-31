@@ -2,8 +2,6 @@ import os
 
 # Environment detection
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-print(f"Environment detected: {ENVIRONMENT}")
-print(f"CORS Origins: {CORS_ORIGINS}")
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
@@ -20,6 +18,10 @@ if ENVIRONMENT == "production":
 else:
     FRONTEND_URL = "http://localhost:3000"
     CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3002,https://pbg-87.vercel.app,https://*.vercel.app"
+
+# Now print, after CORS_ORIGINS is defined
+print(f"Environment detected: {ENVIRONMENT}")
+print(f"CORS Origins: {CORS_ORIGINS}")
 
 # File upload configuration
 UPLOAD_DIR = "uploads"
