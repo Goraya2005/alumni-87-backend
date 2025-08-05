@@ -30,8 +30,20 @@ def create_member(member: MemberCreate, db: Session = Depends(get_db)):
     return db_member
 
 @router.get("/", response_model=List[dict])
-def read_members(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Get all members with their user information"""
+def read_members(
+    skip: int = 0, 
+    limit: int = 100, 
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """Get all members with their user information (authenticated users only)"""
+    # Verify authentication
+    username = decode_access_token(token)
+    current_user = db.query(User).filter(User.username == username).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+    
+    # Get all members
     members = db.query(Member).offset(skip).limit(limit).all()
     
     result = []
@@ -246,6 +258,55 @@ def delete_member(member_id: str, db: Session = Depends(get_db)):
     db.delete(db_member)
     db.commit()
     return {"ok": True}
+
+@router.get("/admin/all", response_model=List[dict])
+def read_all_members_admin(
+    skip: int = 0, 
+    limit: int = 100, 
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """Get all members including admin users (admin only)"""
+    # Verify authentication and admin role
+    username = decode_access_token(token)
+    current_user = db.query(User).filter(User.username == username).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+    
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get all members including admin users
+    members = db.query(Member).offset(skip).limit(limit).all()
+    
+    result = []
+    for member in members:
+        user = db.query(User).filter(User.id == member.user_id).first()
+        if user:
+            result.append({
+                "id": member.id,
+                "registrationNumber": member.registration_number,
+                "department": member.department,
+                "address": member.address,
+                "city": member.city,
+                "country": member.country,
+                "phone": member.phone,
+                "avatarUrl": member.avatar_url,
+                "bio": member.bio,
+                "isProfileComplete": member.is_profile_complete,
+                "createdAt": member.created_at,
+                "updatedAt": member.updated_at,
+                "user": {
+                    "id": user.id,
+                    "name": user.name,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "createdAt": user.created_at
+                }
+            })
+    
+    return result
 
 @router.put("/profile")
 def update_own_member_profile(

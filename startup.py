@@ -28,6 +28,20 @@ def startup():
     
     init_database()
     create_upload_directories()
+    
+    # Check database connection and log member count
+    try:
+        from database import SessionLocal
+        from models import User, Member
+        db = SessionLocal()
+        user_count = db.query(User).count()
+        member_count = db.query(Member).count()
+        admin_count = db.query(User).filter(User.role == 'ADMIN').count()
+        print(f"Database initialized with {user_count} users, {member_count} members, {admin_count} admins")
+        db.close()
+    except Exception as e:
+        print(f"Warning: Could not query database: {e}")
+    
     print("Startup complete!")
 
 if __name__ == "__main__":
