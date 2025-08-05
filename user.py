@@ -230,6 +230,62 @@ def update_user(user_id: str, update: UserUpdateRequest = Body(...), db: Session
     db.refresh(user)
     return user
 
+@router.get("/admin/all", response_model=list)
+def read_all_users_admin(
+    skip: int = 0, 
+    limit: int = 100, 
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """Get all users with their member information (admin only)"""
+    # Verify authentication and admin role
+    username = decode_access_token(token)
+    current_user = get_user_by_username(db, username)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+    
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get all users with their member profiles
+    users = db.query(User).offset(skip).limit(limit).all()
+    
+    result = []
+    for user in users:
+        from models import Member
+        member = db.query(Member).filter(Member.user_id == user.id).first()
+        
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "createdAt": user.created_at,
+            "updatedAt": user.updated_at,
+            "member": None
+        }
+        
+        if member:
+            user_data["member"] = {
+                "id": member.id,
+                "registrationNumber": member.registration_number,
+                "department": member.department,
+                "address": member.address,
+                "city": member.city,
+                "country": member.country,
+                "phone": member.phone,
+                "avatarUrl": member.avatar_url,
+                "bio": member.bio,
+                "isProfileComplete": member.is_profile_complete,
+                "createdAt": member.created_at,
+                "updatedAt": member.updated_at
+            }
+        
+        result.append(user_data)
+    
+    return result
+
 @router.put("/profile")
 def update_own_user_profile(
     update: UserUpdateRequest = Body(...),
@@ -254,4 +310,4 @@ def update_own_user_profile(
         user.email = update.email
     db.commit()
     db.refresh(user)
-    return user 
+    return user
